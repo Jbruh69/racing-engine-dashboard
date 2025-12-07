@@ -473,40 +473,40 @@ st.markdown("**🔻 Classes**")
 all_classes = sorted([str(c) for c in df['Class'].dropna().unique()])
 selected_classes = st.multiselect("Classes", all_classes, default=all_classes, label_visibility="collapsed")
 
-# Range sliders
+# Single value sliders (max filters)
 st.markdown("**⚖️ Weight Range (kg): 0 - 500**")
-weight_range = st.slider(
-    "Weight Range",
+max_weight = st.slider(
+    "Max Weight",
     min_value=0,
     max_value=500,
-    value=(0, 500),
+    value=500,
     label_visibility="collapsed"
 )
 
 st.markdown("**⚡ Max Torque Range (Nm): 0 - 1000**")
-torque_range = st.slider(
-    "Torque Range",
+min_torque = st.slider(
+    "Min Torque",
     min_value=0,
     max_value=1000,
-    value=(0, 1000),
+    value=0,
     label_visibility="collapsed"
 )
 
 st.markdown("**⚙️ Horsepower Range (HP): 0 - 1000**")
-hp_range = st.slider(
-    "HP Range",
+min_hp = st.slider(
+    "Min HP",
     min_value=0,
     max_value=1000,
-    value=(0, 1000),
+    value=0,
     label_visibility="collapsed"
 )
 
 st.markdown("**📊 Torque/Weight Ratio: 0 - 5.0**")
-tw_range = st.slider(
-    "T/W Range",
+min_tw = st.slider(
+    "Min T/W",
     min_value=0.0,
     max_value=5.0,
-    value=(0.0, 5.0),
+    value=0.0,
     step=0.1,
     label_visibility="collapsed"
 )
@@ -540,29 +540,17 @@ if search:
 if selected_classes:
     filtered = filtered[filtered['Class'].isin(selected_classes) | filtered['Class'].isna()]
 
-# Weight filter
-filtered = filtered[
-    (filtered['Engine Weight (KG)'] >= weight_range[0]) &
-    (filtered['Engine Weight (KG)'] <= weight_range[1])
-]
+# Weight filter (max weight)
+filtered = filtered[filtered['Engine Weight (KG)'] <= max_weight]
 
-# Torque filter
-filtered = filtered[
-    (filtered['Max Torque'] >= torque_range[0]) &
-    (filtered['Max Torque'] <= torque_range[1])
-]
+# Torque filter (min torque)
+filtered = filtered[filtered['Max Torque'] >= min_torque]
 
-# HP filter
-filtered = filtered[
-    (filtered['HorsePower'] >= hp_range[0]) &
-    (filtered['HorsePower'] <= hp_range[1])
-]
+# HP filter (min HP)
+filtered = filtered[filtered['HorsePower'] >= min_hp]
 
-# T/W Ratio filter
-filtered = filtered[
-    (filtered['Torque to Weight'] >= tw_range[0]) &
-    (filtered['Torque to Weight'] <= tw_range[1])
-]
+# T/W Ratio filter (min ratio)
+filtered = filtered[filtered['Torque to Weight'] >= min_tw]
 
 # Turbo filter
 if turbo_filter == "Yes Turbo":
@@ -602,67 +590,43 @@ else:
         # Rank styling
         if rank == 1:
             rank_display = "🥇"
-            rank_class = "rank-gold"
         elif rank == 2:
             rank_display = "🥈"
-            rank_class = "rank-silver"
         elif rank == 3:
             rank_display = "🥉"
-            rank_class = "rank-bronze"
         else:
             rank_display = f"#{rank}"
-            rank_class = "rank-normal"
         
-        # Badges
-        turbo_badge = '<span class="turbo-badge">⚡ TURBO</span>' if eng['Is Turbo'] else ''
+        # Turbo and class info
+        is_turbo = eng['Is Turbo']
+        turbo_text = " ⚡ TURBO" if is_turbo else ""
         
         class_val = eng.get('Class', '')
-        class_badge = f'<span class="class-badge">{class_val}</span>' if pd.notna(class_val) and class_val else ''
+        class_text = f" • {class_val}" if pd.notna(class_val) and class_val else ""
         
         # Boost info
         turbo_pressure = eng.get('Turbine Pressure', 0)
         if pd.isna(turbo_pressure):
             turbo_pressure = 0
-        boost_text = f" • Boost: {turbo_pressure:.2f} bar" if eng['Is Turbo'] and turbo_pressure > 0 else ""
+        boost_text = f" • Boost: {turbo_pressure:.2f} bar" if is_turbo and turbo_pressure > 0 else ""
         
-        card_html = f'''
-        <div class="engine-card">
-            <div class="engine-header">
-                <span class="engine-rank {rank_class}">{rank_display}</span>
-                <span class="engine-name">{eng['Engine']}</span>
-                {turbo_badge}
-                {class_badge}
-            </div>
-            <div class="engine-car">{eng['Car']}{boost_text}</div>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-label">T/W Ratio</div>
-                    <div class="stat-value">{eng['Torque to Weight']:.2f}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Max Torque</div>
-                    <div class="stat-value">{eng['Max Torque']:.0f} Nm</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Weight</div>
-                    <div class="stat-value">{eng['Engine Weight (KG)']:.0f} kg</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Horsepower</div>
-                    <div class="stat-value">{eng['HorsePower']:.0f} HP</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Peak RPM</div>
-                    <div class="stat-value">{int(eng['Peak RPM']):,}</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">Rev Limit</div>
-                    <div class="stat-value">{int(eng['Rev Limiter']):,}</div>
-                </div>
-            </div>
-        </div>
-        '''
-        st.markdown(card_html, unsafe_allow_html=True)
+        # Create card using Streamlit components
+        with st.container():
+            # Header row
+            header_text = f"{rank_display} **{eng['Engine']}**{turbo_text}{class_text}"
+            st.markdown(header_text)
+            st.caption(f"{eng['Car']}{boost_text}")
+            
+            # Stats row using columns
+            c1, c2, c3, c4, c5, c6 = st.columns(6)
+            c1.metric("T/W Ratio", f"{eng['Torque to Weight']:.2f}")
+            c2.metric("Max Torque", f"{eng['Max Torque']:.0f} Nm")
+            c3.metric("Weight", f"{eng['Engine Weight (KG)']:.0f} kg")
+            c4.metric("Horsepower", f"{eng['HorsePower']:.0f} HP")
+            c5.metric("Peak RPM", f"{int(eng['Peak RPM']):,}")
+            c6.metric("Rev Limit", f"{int(eng['Rev Limiter']):,}")
+            
+            st.markdown("---")
 
 # Footer
 st.markdown("---")
