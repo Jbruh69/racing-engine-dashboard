@@ -473,41 +473,54 @@ st.markdown("**🔻 Classes**")
 all_classes = sorted([str(c) for c in df['Class'].dropna().unique()])
 selected_classes = st.multiselect("Classes", all_classes, default=all_classes, label_visibility="collapsed")
 
-# Single value sliders (max filters)
-st.markdown("**⚖️ Weight Range (kg): 0 - 500**")
+# Calculate actual data ranges for sliders
+min_weight_data = int(df['Engine Weight (KG)'].min())
+max_weight_data = int(df['Engine Weight (KG)'].max())
+
+min_torque_data = int(df['Max Torque'].min())
+max_torque_data = int(df['Max Torque'].max())
+
+min_hp_data = int(df['HorsePower'].min())
+max_hp_data = int(df['HorsePower'].max())
+
+min_tw_data = float(df['Torque to Weight'].min())
+max_tw_data = float(df['Torque to Weight'].max())
+
+# Single value sliders with data-based ranges
+st.markdown(f"**⚖️ Max Weight (kg): {min_weight_data} - {max_weight_data}**")
 max_weight = st.slider(
     "Max Weight",
-    min_value=0,
-    max_value=500,
-    value=500,
+    min_value=min_weight_data,
+    max_value=max_weight_data,
+    value=max_weight_data,  # Default to max (show all)
     label_visibility="collapsed"
 )
 
-st.markdown("**⚡ Max Torque Range (Nm): 0 - 1000**")
+st.markdown(f"**⚡ Min Torque (Nm): {min_torque_data} - {max_torque_data}**")
 min_torque = st.slider(
     "Min Torque",
-    min_value=0,
-    max_value=1000,
-    value=0,
+    min_value=min_torque_data,
+    max_value=max_torque_data,
+    value=min_torque_data,  # Default to min (show all)
     label_visibility="collapsed"
 )
 
-st.markdown("**⚙️ Horsepower Range (HP): 0 - 1000**")
+st.markdown(f"**⚙️ Min Horsepower (HP): {min_hp_data} - {max_hp_data}**")
 min_hp = st.slider(
     "Min HP",
-    min_value=0,
-    max_value=1000,
-    value=0,
+    min_value=min_hp_data,
+    max_value=max_hp_data,
+    value=min_hp_data,  # Default to min (show all)
     label_visibility="collapsed"
 )
 
-st.markdown("**📊 Torque/Weight Ratio: 0 - 5.0**")
+st.markdown(f"**📊 Min T/W Ratio: {min_tw_data:.2f} - {max_tw_data:.2f}**")
 min_tw = st.slider(
     "Min T/W",
-    min_value=0.0,
-    max_value=5.0,
-    value=0.0,
-    step=0.1,
+    min_value=round(min_tw_data, 2),
+    max_value=round(max_tw_data, 2),
+    value=round(min_tw_data, 2),  # Default to min (show all)
+    step=0.01,
     label_visibility="collapsed"
 )
 
