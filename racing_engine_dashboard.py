@@ -121,221 +121,273 @@ st.set_page_config(
     page_title="Racing Engine Dashboard",
     page_icon="🏎️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
-# Custom CSS for racing aesthetic
+# Custom CSS matching the design
 st.markdown("""
 <style>
-    /* Import racing-inspired fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+    /* Import fonts */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     
     /* Main background */
     .stApp {
-        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+        background: #1a1a2e;
+        font-family: 'Inter', sans-serif;
     }
     
     /* Header styling */
     .main-header {
-        font-family: 'Orbitron', monospace;
-        font-size: 3rem;
-        font-weight: 900;
+        font-family: 'Inter', sans-serif;
+        font-size: 2.2rem;
+        font-weight: 700;
         text-align: center;
-        background: linear-gradient(90deg, #ff6b35, #f7931e, #ffcc00);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 0 40px rgba(255, 107, 53, 0.5);
-        margin-bottom: 0.5rem;
-        letter-spacing: 3px;
+        color: #ff6b4a;
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+    
+    .header-icon {
+        width: 28px;
+        height: 28px;
+        background: #ff6b4a;
+        border-radius: 4px;
     }
     
     .sub-header {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 1.1rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
         text-align: center;
         color: #8892b0;
         margin-bottom: 2rem;
-        letter-spacing: 5px;
-        text-transform: uppercase;
     }
     
-    /* Sidebar styling */
-    [data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #0f0f23 0%, #1a1a2e 100%);
-        border-right: 1px solid #ff6b35;
+    /* Filter container */
+    .filter-container {
+        background: #252542;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
     }
     
-    [data-testid="stSidebar"] .stMarkdown h2 {
-        font-family: 'Orbitron', monospace;
-        color: #ff6b35;
-        font-size: 1.2rem;
-        border-bottom: 2px solid #ff6b35;
-        padding-bottom: 10px;
+    .filter-label {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
+        color: #ffffff;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     
-    /* Metric cards */
-    [data-testid="stMetric"] {
-        background: linear-gradient(145deg, #1a1a2e, #0f0f23);
-        border: 1px solid #ff6b35;
-        border-radius: 10px;
-        padding: 15px;
-        box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+    /* Slider styling */
+    .stSlider > div > div > div {
+        background: #3b82f6 !important;
     }
     
-    [data-testid="stMetric"] label {
-        font-family: 'Rajdhani', sans-serif;
-        color: #8892b0 !important;
-        font-size: 0.9rem !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+    .stSlider [data-baseweb="slider"] {
+        margin-top: 0px;
     }
     
-    [data-testid="stMetric"] [data-testid="stMetricValue"] {
-        font-family: 'Orbitron', monospace;
+    /* Select box styling */
+    .stSelectbox > div > div {
+        background: #1e1e38 !important;
+        border: 1px solid #3a3a5a !important;
+        border-radius: 8px;
+    }
+    
+    /* Text input styling */
+    .stTextInput > div > div > input {
+        background: #1e1e38 !important;
+        border: 1px solid #3a3a5a !important;
+        border-radius: 8px;
         color: #ffffff !important;
-        font-size: 1.8rem !important;
+        font-family: 'Inter', sans-serif;
     }
     
-    /* Engine cards */
+    .stTextInput > div > div > input::placeholder {
+        color: #6a6a8a !important;
+    }
+    
+    /* Multiselect styling */
+    .stMultiSelect > div > div {
+        background: #1e1e38 !important;
+        border: 1px solid #3a3a5a !important;
+        border-radius: 8px;
+    }
+    
+    .stMultiSelect [data-baseweb="tag"] {
+        background-color: #3b82f6 !important;
+        border-radius: 4px;
+    }
+    
+    /* Button group for turbo type */
+    .turbo-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    
+    .turbo-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s ease;
+    }
+    
+    .turbo-btn-active {
+        background: #22c55e;
+        color: #ffffff;
+    }
+    
+    .turbo-btn-inactive {
+        background: #3a3a5a;
+        color: #ffffff;
+    }
+    
+    /* Engine card styling */
     .engine-card {
-        background: linear-gradient(145deg, #1a1a2e, #0f0f23);
-        border: 1px solid #2a2a4a;
+        background: #252542;
         border-radius: 12px;
         padding: 20px;
-        margin-bottom: 15px;
-        transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
+        margin-bottom: 16px;
+        border-left: 4px solid #ff6b4a;
     }
     
-    .engine-card:hover {
-        border-color: #ff6b35;
-        box-shadow: 0 0 30px rgba(255, 107, 53, 0.3);
-        transform: translateY(-2px);
+    .engine-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
     }
     
-    .engine-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: linear-gradient(180deg, #ff6b35, #f7931e);
+    .engine-rank {
+        font-family: 'Inter', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        min-width: 45px;
     }
+    
+    .rank-gold { color: #ffd700; }
+    .rank-silver { color: #c0c0c0; }
+    .rank-bronze { color: #cd7f32; }
+    .rank-normal { color: #ff6b4a; }
     
     .engine-name {
-        font-family: 'Orbitron', monospace;
-        font-size: 1.4rem;
-        font-weight: 700;
+        font-family: 'Inter', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 600;
         color: #ffffff;
-        margin-bottom: 5px;
     }
     
     .engine-car {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 1rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.9rem;
         color: #8892b0;
-        margin-bottom: 15px;
+        margin-left: 57px;
+        margin-bottom: 16px;
     }
     
-    .stat-grid {
+    .turbo-badge {
+        background: linear-gradient(90deg, #f97316, #fb923c);
+        color: #000;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+    
+    .class-badge {
+        background: rgba(59, 130, 246, 0.2);
+        border: 1px solid #3b82f6;
+        color: #3b82f6;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 4px;
+    }
+    
+    /* Stats grid */
+    .stats-grid {
         display: grid;
         grid-template-columns: repeat(6, 1fr);
-        gap: 10px;
+        gap: 12px;
+        margin-left: 57px;
     }
     
-    .stat-box {
-        background: rgba(255, 107, 53, 0.1);
-        border: 1px solid #2a2a4a;
+    .stat-item {
+        background: #1e1e38;
         border-radius: 8px;
-        padding: 10px;
+        padding: 12px;
         text-align: center;
     }
     
     .stat-label {
-        font-family: 'Rajdhani', sans-serif;
-        font-size: 0.75rem;
-        color: #8892b0;
+        font-family: 'Inter', sans-serif;
+        font-size: 0.7rem;
+        color: #6b7280;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
     }
     
     .stat-value {
-        font-family: 'Orbitron', monospace;
-        font-size: 1.1rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
         color: #ffffff;
-        font-weight: 600;
     }
     
-    /* Rank badges */
-    .rank-gold { color: #ffd700; text-shadow: 0 0 10px #ffd700; }
-    .rank-silver { color: #c0c0c0; text-shadow: 0 0 10px #c0c0c0; }
-    .rank-bronze { color: #cd7f32; text-shadow: 0 0 10px #cd7f32; }
-    .rank-normal { color: #ff6b35; }
-    
-    /* Turbo badge */
-    .turbo-badge {
-        display: inline-block;
-        background: linear-gradient(90deg, #ff6b35, #f7931e);
-        color: #000;
-        font-family: 'Orbitron', monospace;
-        font-size: 0.7rem;
-        font-weight: 700;
-        padding: 3px 8px;
-        border-radius: 4px;
-        margin-left: 10px;
-        letter-spacing: 1px;
-    }
-    
-    /* Class badge */
-    .class-badge {
-        display: inline-block;
-        background: rgba(255, 107, 53, 0.2);
-        border: 1px solid #ff6b35;
-        color: #ff6b35;
-        font-family: 'Orbitron', monospace;
-        font-size: 0.7rem;
-        font-weight: 600;
-        padding: 3px 10px;
-        border-radius: 4px;
-        margin-left: 10px;
-    }
-    
-    /* Divider */
-    .custom-divider {
-        height: 1px;
-        background: linear-gradient(90deg, transparent, #ff6b35, transparent);
-        margin: 30px 0;
-    }
-    
-    /* Hide default streamlit elements */
+    /* Hide streamlit elements */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     header {visibility: hidden;}
     
-    /* Multiselect styling */
-    .stMultiSelect [data-baseweb="tag"] {
-        background-color: #ff6b35 !important;
+    /* Adjust column gaps */
+    [data-testid="column"] {
+        padding: 0 8px;
     }
     
-    /* Radio buttons */
+    /* Custom radio buttons to look like button group */
     .stRadio > div {
-        font-family: 'Rajdhani', sans-serif;
+        flex-direction: row !important;
+        gap: 8px;
     }
     
-    /* Text input */
-    .stTextInput input {
-        font-family: 'Rajdhani', sans-serif;
-        background: #0f0f23 !important;
-        border: 1px solid #2a2a4a !important;
+    .stRadio > div > label {
+        background: #3a3a5a !important;
+        padding: 8px 16px !important;
+        border-radius: 6px !important;
         color: #ffffff !important;
+        font-weight: 500 !important;
+        margin: 0 !important;
+        cursor: pointer;
     }
     
-    .stTextInput input:focus {
-        border-color: #ff6b35 !important;
-        box-shadow: 0 0 10px rgba(255, 107, 53, 0.3) !important;
+    .stRadio > div > label[data-baseweb="radio"]:has(input:checked) {
+        background: #22c55e !important;
+    }
+    
+    div[data-baseweb="select"] > div {
+        background: #1e1e38 !important;
+        border-color: #3a3a5a !important;
+    }
+    
+    /* Sort button */
+    .sort-container {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -345,9 +397,7 @@ st.markdown("""
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def calculate_turbo_torque(row):
-    """Calculate actual torque for turbocharged engines.
-    Formula: Actual torque = base torque + (base torque × turbine pressure)
-    """
+    """Calculate actual torque for turbocharged engines."""
     low = row.get('Low Torque(Nm)', 0)
     med = row.get('Medium Torque(Nm)', 0)
     high = row.get('High Torque(Nm)', 0)
@@ -387,51 +437,90 @@ def load_data():
 # MAIN APPLICATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
-# Header
-st.markdown('<h1 class="main-header">🏎️ RACING ENGINE DASHBOARD</h1>', unsafe_allow_html=True)
-st.markdown('<p class="sub-header">Performance Analytics & Comparison Tool</p>', unsafe_allow_html=True)
-
 # Load data
 df = load_data()
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SIDEBAR FILTERS
-# ─────────────────────────────────────────────────────────────────────────────
+# Header
+st.markdown('''
+<div class="main-header">
+    <div class="header-icon"></div>
+    Racing Engine Performance Dashboard
+</div>
+''', unsafe_allow_html=True)
 
-st.sidebar.markdown("## 🎛️ FILTERS")
+# ─────────────────────────────────────────────────────────────────────────────
+# FILTERS SECTION
+# ─────────────────────────────────────────────────────────────────────────────
 
 # Search
-search = st.sidebar.text_input("🔍 Search Engine or Car", "", placeholder="Type to search...")
+st.markdown("**🔍 Search Engines**")
+search = st.text_input("Search", "", placeholder="Search by engine or car name...", label_visibility="collapsed")
 
-# Class filter
+# Sort and Classes row
+col1, col2 = st.columns([3, 1])
+
+with col1:
+    st.markdown("**📈 Sort By**")
+    sort_options = ["Torque/Weight Ratio", "Max Torque", "Weight", "Horsepower", "Power/Weight Ratio"]
+    sort_by = st.selectbox("Sort", sort_options, label_visibility="collapsed")
+
+with col2:
+    st.markdown("**↓**")
+    sort_order = st.selectbox("Order", ["Descending", "Ascending"], label_visibility="collapsed")
+
+# Classes multiselect
+st.markdown("**🔻 Classes**")
 all_classes = sorted([str(c) for c in df['Class'].dropna().unique()])
-selected_classes = st.sidebar.multiselect(
-    "📊 Classes",
-    all_classes,
-    default=all_classes,
-    help="Filter by vehicle class"
+selected_classes = st.multiselect("Classes", all_classes, default=all_classes, label_visibility="collapsed")
+
+# Range sliders
+st.markdown("**⚖️ Weight Range (kg): 0 - 500**")
+weight_range = st.slider(
+    "Weight Range",
+    min_value=0,
+    max_value=500,
+    value=(0, 500),
+    label_visibility="collapsed"
 )
 
-# Turbo filter
-turbo_filter = st.sidebar.radio(
-    "⚡ Turbo Type",
-    ["All Engines", "Turbo Only", "NA Only"],
-    help="Filter by aspiration type"
+st.markdown("**⚡ Max Torque Range (Nm): 0 - 1000**")
+torque_range = st.slider(
+    "Torque Range",
+    min_value=0,
+    max_value=1000,
+    value=(0, 1000),
+    label_visibility="collapsed"
 )
 
-# Sort options
-sort_options = {
-    "Torque to Weight": "Best T/W Ratio",
-    "Max Torque": "Highest Torque",
-    "HorsePower": "Most Horsepower",
-    "Power to Weight": "Best P/W Ratio",
-    "Engine Weight (KG)": "Lightest First"
-}
-sort_by = st.sidebar.selectbox(
-    "📈 Sort By",
-    list(sort_options.keys()),
-    format_func=lambda x: sort_options[x]
+st.markdown("**⚙️ Horsepower Range (HP): 0 - 1000**")
+hp_range = st.slider(
+    "HP Range",
+    min_value=0,
+    max_value=1000,
+    value=(0, 1000),
+    label_visibility="collapsed"
 )
+
+st.markdown("**📊 Torque/Weight Ratio: 0 - 5.0**")
+tw_range = st.slider(
+    "T/W Range",
+    min_value=0.0,
+    max_value=5.0,
+    value=(0.0, 5.0),
+    step=0.1,
+    label_visibility="collapsed"
+)
+
+# Turbo Type
+st.markdown("**Turbo Type**")
+turbo_filter = st.radio(
+    "Turbo",
+    ["All Engines", "Yes Turbo", "No Turbo"],
+    horizontal=True,
+    label_visibility="collapsed"
+)
+
+st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # APPLY FILTERS
@@ -449,50 +538,68 @@ if search:
 
 # Class filter
 if selected_classes:
-    filtered = filtered[filtered['Class'].isin(selected_classes)]
+    filtered = filtered[filtered['Class'].isin(selected_classes) | filtered['Class'].isna()]
+
+# Weight filter
+filtered = filtered[
+    (filtered['Engine Weight (KG)'] >= weight_range[0]) &
+    (filtered['Engine Weight (KG)'] <= weight_range[1])
+]
+
+# Torque filter
+filtered = filtered[
+    (filtered['Max Torque'] >= torque_range[0]) &
+    (filtered['Max Torque'] <= torque_range[1])
+]
+
+# HP filter
+filtered = filtered[
+    (filtered['HorsePower'] >= hp_range[0]) &
+    (filtered['HorsePower'] <= hp_range[1])
+]
+
+# T/W Ratio filter
+filtered = filtered[
+    (filtered['Torque to Weight'] >= tw_range[0]) &
+    (filtered['Torque to Weight'] <= tw_range[1])
+]
 
 # Turbo filter
-if turbo_filter == "Turbo Only":
+if turbo_filter == "Yes Turbo":
     filtered = filtered[filtered['Is Turbo']]
-elif turbo_filter == "NA Only":
+elif turbo_filter == "No Turbo":
     filtered = filtered[~filtered['Is Turbo']]
 
-# Sort
-ascending = sort_by == "Engine Weight (KG)"
-filtered = filtered.sort_values(sort_by, ascending=ascending).reset_index(drop=True)
+# Sort mapping
+sort_column_map = {
+    "Torque/Weight Ratio": "Torque to Weight",
+    "Max Torque": "Max Torque",
+    "Weight": "Engine Weight (KG)",
+    "Horsepower": "HorsePower",
+    "Power/Weight Ratio": "Power to Weight"
+}
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SUMMARY METRICS
-# ─────────────────────────────────────────────────────────────────────────────
+sort_col = sort_column_map[sort_by]
+ascending = sort_order == "Ascending"
+if sort_by == "Weight":
+    ascending = not ascending  # Lighter is better by default
 
-col1, col2, col3, col4, col5 = st.columns(5)
+filtered = filtered.sort_values(sort_col, ascending=ascending).reset_index(drop=True)
 
-with col1:
-    st.metric("🏎️ Total Engines", len(filtered))
-with col2:
-    st.metric("⚡ Turbocharged", int(filtered['Is Turbo'].sum()))
-with col3:
-    st.metric("🌬️ Naturally Aspirated", int((~filtered['Is Turbo']).sum()))
-with col4:
-    avg_tw = filtered['Torque to Weight'].mean()
-    st.metric("📊 Avg T/W Ratio", f"{avg_tw:.2f}" if not pd.isna(avg_tw) else "N/A")
-with col5:
-    avg_hp = filtered['HorsePower'].mean()
-    st.metric("🔥 Avg Horsepower", f"{avg_hp:.0f}" if not pd.isna(avg_hp) else "N/A")
-
-st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+# Update subtitle with count
+st.markdown(f'<p class="sub-header">Analyze and rank {len(filtered)} racing engines by performance metrics</p>', unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ENGINE LISTINGS
 # ─────────────────────────────────────────────────────────────────────────────
 
 if len(filtered) == 0:
-    st.warning("No engines match your current filters. Try adjusting your search criteria.")
+    st.warning("No engines match your current filters. Try adjusting your criteria.")
 else:
     for idx, eng in filtered.iterrows():
         rank = idx + 1
         
-        # Rank display
+        # Rank styling
         if rank == 1:
             rank_display = "🥇"
             rank_class = "rank-gold"
@@ -506,69 +613,61 @@ else:
             rank_display = f"#{rank}"
             rank_class = "rank-normal"
         
-        # Turbo info
+        # Badges
         turbo_badge = '<span class="turbo-badge">⚡ TURBO</span>' if eng['Is Turbo'] else ''
+        
+        class_val = eng.get('Class', '')
+        class_badge = f'<span class="class-badge">{class_val}</span>' if pd.notna(class_val) and class_val else ''
         
         # Boost info
         turbo_pressure = eng.get('Turbine Pressure', 0)
         if pd.isna(turbo_pressure):
             turbo_pressure = 0
-        boost_text = f" • {turbo_pressure:.2f} bar" if eng['Is Turbo'] and turbo_pressure > 0 else ""
+        boost_text = f" • Boost: {turbo_pressure:.2f} bar" if eng['Is Turbo'] and turbo_pressure > 0 else ""
         
-        # Class badge
-        class_val = eng.get('Class', '')
-        class_badge = f'<span class="class-badge">{class_val}</span>' if pd.notna(class_val) and class_val else ''
-        
-        # Build card HTML
         card_html = f'''
         <div class="engine-card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div>
-                    <span class="engine-name {rank_class}">{rank_display}</span>
-                    <span class="engine-name">{eng['Engine']}</span>
-                    {turbo_badge}
-                    {class_badge}
-                </div>
+            <div class="engine-header">
+                <span class="engine-rank {rank_class}">{rank_display}</span>
+                <span class="engine-name">{eng['Engine']}</span>
+                {turbo_badge}
+                {class_badge}
             </div>
             <div class="engine-car">{eng['Car']}{boost_text}</div>
-            <div class="stat-grid">
-                <div class="stat-box">
+            <div class="stats-grid">
+                <div class="stat-item">
                     <div class="stat-label">T/W Ratio</div>
                     <div class="stat-value">{eng['Torque to Weight']:.2f}</div>
                 </div>
-                <div class="stat-box">
+                <div class="stat-item">
                     <div class="stat-label">Max Torque</div>
                     <div class="stat-value">{eng['Max Torque']:.0f} Nm</div>
                 </div>
-                <div class="stat-box">
+                <div class="stat-item">
                     <div class="stat-label">Weight</div>
                     <div class="stat-value">{eng['Engine Weight (KG)']:.0f} kg</div>
                 </div>
-                <div class="stat-box">
+                <div class="stat-item">
                     <div class="stat-label">Horsepower</div>
                     <div class="stat-value">{eng['HorsePower']:.0f} HP</div>
                 </div>
-                <div class="stat-box">
+                <div class="stat-item">
                     <div class="stat-label">Peak RPM</div>
-                    <div class="stat-value">{int(eng['Peak RPM'])}</div>
+                    <div class="stat-value">{int(eng['Peak RPM']):,}</div>
                 </div>
-                <div class="stat-box">
+                <div class="stat-item">
                     <div class="stat-label">Rev Limit</div>
-                    <div class="stat-value">{int(eng['Rev Limiter'])}</div>
+                    <div class="stat-value">{int(eng['Rev Limiter']):,}</div>
                 </div>
             </div>
         </div>
         '''
         st.markdown(card_html, unsafe_allow_html=True)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# FOOTER
-# ─────────────────────────────────────────────────────────────────────────────
-
-st.markdown('<div class="custom-divider"></div>', unsafe_allow_html=True)
+# Footer
+st.markdown("---")
 st.markdown("""
-<div style="text-align: center; color: #4a4a6a; font-family: 'Rajdhani', sans-serif; font-size: 0.9rem;">
-    <p>⚡ <strong>Turbo Calculation:</strong> Actual Torque = Base Torque + (Base Torque × Turbine Pressure)</p>
-    <p style="margin-top: 10px; color: #3a3a5a;">Racing Engine Dashboard • Data embedded from engine spreadsheet</p>
+<div style="text-align: center; color: #6b7280; font-size: 0.85rem;">
+    ⚡ <strong>Turbo Calculation:</strong> Actual Torque = Base Torque + (Base Torque × Turbine Pressure)
 </div>
 """, unsafe_allow_html=True)
