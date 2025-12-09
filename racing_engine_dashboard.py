@@ -1,12 +1,15 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
 import io
 
 # Page setup
-st.set_page_config(page_title="🏁 Racing Engine Dashboard", page_icon="🏁", layout="wide")
+st.set_page_config(page_title="🏁 Racing Dashboard", page_icon="🏁", layout="wide")
 
-# Embedded CSV data
-CSV_DATA = """Car,Engine,Engine Weight (KG),Low Torque(Nm),Medium Torque(Nm),High Torque(Nm),Rev Limiter,Turbo,Peak RPM,HorsePower,Turbine Pressure,Class
+# ============== EMBEDDED DATA ==============
+
+ENGINE_DATA = """Car,Engine,Engine Weight (KG),Low Torque(Nm),Medium Torque(Nm),High Torque(Nm),Rev Limiter,Turbo,Peak RPM,HorsePower,Turbine Pressure,Class
 HC6,DA15,140,109,107,110,7800,No,8000,122,,C1
 NX5,PF1,155,126,130,126,7200,No,7500,127,,C1
 DTS,DL20,160,187,168,144,6200,No,6500,138,,C1
@@ -113,6 +116,111 @@ CVL*,LL6S*,270,530,541,486,6200,No,6500,421,,C3
 YRS*,G1E6*,120,142,143,136,7200,Yes,7600,270,1,C3
 HRD*,FC3*,195,243,293,287,7200,Yes,7500,418,0.7,C3"""
 
+CHASSIS_DATA = """Car,Weight,Front Aero,Rear Aero,Class,Max Wheel Size,Drivetrain,Weight Dist Front/Rear
+HC6,1077,32,38,C1,,FF,60/40
+NX5,1082,32,38,C1,,FR,52/48
+DTS,1180,32,37,C1,,FR,56/44
+NX5C,1084,32,38,C1,,FR,51/49
+PF7,1480,35,41,C1,,FR,53/47
+ECL,1295,31,36,C1,,FF,59/41
+E86,955,35,41,C1,,FR,55/45
+2MR,1187,33,39,C1,,MR,44/56
+B19,1170,28,33,C1,,FR,52/48
+FLD,901,35,41,C1,,FR,52/48
+E36,1260,35,41,C1,,FR,51/49
+20R,946,35,41,C1,,FR,50/50
+30Z,1336,38,45,C1,,FR,51/49
+S18,1012,35,41,C1,,FR,57/43
+V7G,1235,33,39,C1,,FF,62/38
+G86,1120,35,41,C1,,FR,55/45
+MCS,1020,32,38,C1,,FF,62/38
+SFR,1380,40,47,C1,325/R20,FAWD,55/45
+30ZC,1336,38,45,C1,,FR,51/49
+FX7,1127,34,40,C2,,FR,50/50
+Z31,1252,32,38,C2,,FR,53/47
+M46,1421,35,41,C2,,FR,50/50
+CHR,1464,33,39,C2,,FR,55/45
+32R,1185,35,41,C2,,FAWD,58/42
+R86,1309,36,42,C2,,FR,53/47
+FST,1393,33,39,C2,,FF,61/39
+CRN,1465,31,36,C2,,FR,56/44
+M30,1029,34,40,C2,,FR,52/48
+WRS,1495,35,41,C2,,FAWD,57/43
+S14,1100,32,37,C2,,FR,56/44
+HC9,886,34,40,C2,,FF,65/35
+HCR,1349,35,41,C2,,FF,61/39
+TTR,1450,34,40,C2,,FAWD,59/41
+S13,990,36,42,C2,,FR,50/50
+S15,1140,33,39,C2,,FR,52/48
+S80,1360,35,41,C2,,FR,54/46
+P64,1330,32,38,C2,,RR,38/62
+DC2,1766,35,41,C2,,FR,54/46
+HI5,1000,32,38,C2,,FF,61/39
+Z35,1340,36,42,C2,,FR,53/47
+Z37,1384,35,41,C2,,FR,53/47
+TM2,1280,32,38,C2,,FR,52/48
+CRT,1270,32,38,C2,,FR,52/48
+HS2,1123,31,36,C2,,FR,50/50
+F69,1364,33,39,C2,,FR,58/42
+34R,1380,35,41,C2,,FR,58/42
+EV9,1245,36,42,C2,,FAWD,59/41
+EVX,1416,35,43,C2,,FAWD,57/43
+WST,1236,36,42,C2,,FAWD,58/42
+M92,1595,36,42,C2,,FR,52/48
+CMR,1568,39,46,C2,,FR,55/45
+M39,1562,29,34,C2,,FR,55/45
+M92C,1615,36,42,C2,,FR,52/48
+63C,1710,37,43,C3,,FR,53/47
+EV6,1190,32,37,C3,,FAWD,60/40
+B31,1700,33,39,C3,,FR,52/48
+S90,1401,37,43,C3,,FR,50/50
+F35,1510,38,45,C3,,FR,50/50
+S65,1609,40,47,C3,,FR,53/47
+DX7,1144,34,40,C3,,FR,50/50
+6RS,1825,36,42,C3,,FAWD,54/46
+STR,1725,35,41,C3,,FR,56/44
+M4R,1477,35,41,C3,,FR,50/50
+B60,1580,40,43,C3,,FR,52/48
+HSS,1643,35,41,C3,,FR,52/48
+BM2,1376,40,47,C3,,FR,50/50
+M90,1701,31,36,C3,,FAWD,54/46
+35R,1588,40,47,C3,,FAWD,53/47
+P91,1345,33,39,C3,,RR,40/60
+HSX,1110,37,43,C3,,MR,42/58
+C70,1288,32,37,C3,,FR,57/43
+CC6,1399,39,46,C3,,FR,54/46
+CC7,1467,46,54,C3,,FR,50/50
+VP1,1335,38,45,C3,,FR,50/50
+M4G,1655,37,44,C3,,FR,50/50
+MGTC,1491,42,50,C3,,FR,50/50
+MGT,1436,42,50,C3,,FR,49/51
+BX5,2246,32,37,C3,,FAWD,50/50
+AR8,1420,42,49,C3,,MAWD,43/57
+LFL,1456,42,49,C3,,FMR,50/50
+LMD,1393,32,38,C3,,MR,43/57
+LMH,1340,44,52,C3,,MR,40/60
+AMV,1321,43,51,C3,,MR,49/51
+S90C,1451,37,43,C3,,FR,50/50
+B8I,1275,38,43,C3,,FR,50/50
+Z40,1394,34,40,C3,,FR,56/44
+GLW,2330,29,35,C3,,FAWD,58/42
+FGT,1195,48,52,C4,,RMR,43/57
+MLN,1315,47,51,C4,,MR,42/58
+LMA,1505,44,51,C4,,MR,43/57
+PGT,1205,46,50,C4,,RR,40/60
+DX8*,1190,36,42,C2,,FR,50/50
+IF6*,1719,35,39,C3,,FAWD,58/42
+33R*,1250,38,44,C2,,FR,51/49
+HNG*,,37,39,C6,,,
+M34*,,37,42,C3,,,
+VPR*,,41,47,,,,
+7RS*,1960,36,41,C3,,FAWD,54/46
+BZ4*,1275,38,43,C3,,FR,49/51
+CVL*,1480,36,38,C3,,FR,55/45
+YRS*,1160,35,41,C3,,FAWD,54/46"""
+
+# ============== DATA PROCESSING ==============
+
 def calculate_turbo_torque(row):
     """Calculate actual torque for turbocharged engines"""
     low = row.get('Low Torque(Nm)', 0)
@@ -131,7 +239,43 @@ def calculate_turbo_torque(row):
     
     return max(low, med, high)
 
-def process_data(df):
+def get_torque_curve_data(row):
+    """Generate torque curve points for a vehicle"""
+    low = row.get('Low Torque(Nm)', 0)
+    med = row.get('Medium Torque(Nm)', 0)
+    high = row.get('High Torque(Nm)', 0)
+    
+    is_turbo = str(row.get('Turbo', '')).lower() == 'yes'
+    pressure = row.get('Turbine Pressure', 0)
+    if pd.isna(pressure):
+        pressure = 0
+    
+    if is_turbo and pressure > 0:
+        low = low + (low * pressure)
+        med = med + (med * pressure)
+        high = high + (high * pressure)
+    
+    rev_limit = row.get('Rev Limiter', 7000)
+    peak_rpm = row.get('Peak RPM', 7500)
+    
+    # Create RPM points
+    rpm_points = [1000, 2000, 3000, int(rev_limit * 0.5), int(rev_limit * 0.7), int(rev_limit * 0.85), int(peak_rpm), int(rev_limit)]
+    
+    # Create corresponding torque values (simplified curve)
+    torque_points = [
+        low * 0.6,   # 1000 RPM
+        low * 0.85,  # 2000 RPM
+        low,         # 3000 RPM (low torque zone)
+        med * 0.95,  # Mid RPM
+        med,         # Peak mid torque
+        high * 0.98, # Approaching high
+        high,        # High torque zone
+        high * 0.85  # Rev limit drop-off
+    ]
+    
+    return rpm_points, torque_points
+
+def process_engine_data(df):
     df['Max Torque'] = df.apply(calculate_turbo_torque, axis=1)
     df['Torque to Weight'] = df['Max Torque'] / df['Engine Weight (KG)']
     df['Power to Weight'] = df['HorsePower'] / df['Engine Weight (KG)']
@@ -141,205 +285,419 @@ def process_data(df):
     df['Power to Weight'] = df['Power to Weight'].round(3)
     return df
 
-# Header
-st.markdown("<h1 style='text-align:center;color:#f97316;'>🏁 Racing Engine Dashboard</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;color:#9ca3af;'>Analyzing 105 racing engines with turbo boost calculations</p>", unsafe_allow_html=True)
+def process_chassis_data(df):
+    df['Total Aero'] = df['Front Aero'] + df['Rear Aero']
+    df['Aero Balance'] = (df['Front Aero'] / df['Total Aero'] * 100).round(1)
+    return df
 
-# Load embedded data
-df = pd.read_csv(io.StringIO(CSV_DATA))
-df = process_data(df)
+# Load data
+engine_df = pd.read_csv(io.StringIO(ENGINE_DATA))
+engine_df = process_engine_data(engine_df)
 
-# Get data ranges
-weight_min, weight_max = float(df['Engine Weight (KG)'].min()), float(df['Engine Weight (KG)'].max())
-torque_min, torque_max = float(df['Max Torque'].min()), float(df['Max Torque'].max())
-hp_min, hp_max = float(df['HorsePower'].min()), float(df['HorsePower'].max())
-tw_min, tw_max = 0.0, float(df['Torque to Weight'].max())
+chassis_df = pd.read_csv(io.StringIO(CHASSIS_DATA))
+chassis_df = process_chassis_data(chassis_df)
 
-# Sidebar filters
-st.sidebar.header("🎛️ Filters")
+# ============== HEADER ==============
 
-# Search
-search = st.sidebar.text_input("🔍 Search Engine/Car", "")
+st.markdown("<h1 style='text-align:center;color:#f97316;'>🏁 Racing Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;color:#9ca3af;'>Complete vehicle analysis: Engines, Chassis, Weight & Aero</p>", unsafe_allow_html=True)
 
-# Turbo filter
-turbo = st.sidebar.radio("Turbo Type", ["All", "Turbo Only", "NA Only"])
+# ============== TABS ==============
 
-# Sort options
-sort_by = st.sidebar.selectbox("Sort By", ["Torque to Weight", "Max Torque", "HorsePower", "Power to Weight", "Engine Weight (KG)"])
+tab1, tab2, tab3, tab4 = st.tabs(["🔧 Engines", "📊 Compare", "⚖️ Weight", "💨 Aero"])
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("📊 Performance Ranges")
+# ============== TAB 1: ENGINES ==============
 
-# Weight sliders
-st.sidebar.markdown("**Weight (kg)**")
-weight_max_slider = st.sidebar.slider(
-    "Maximum Weight",
-    weight_min, weight_max, weight_max,
-    key="weight_max",
-    help="Set maximum weight - slide left to reduce"
-)
-weight_min_slider = st.sidebar.slider(
-    "Minimum Weight",
-    weight_min, weight_max_slider, weight_min,
-    key="weight_min",
-    help="Set minimum weight (optional)"
-)
-
-# Torque sliders
-st.sidebar.markdown("**Max Torque (Nm)**")
-torque_max_slider = st.sidebar.slider(
-    "Maximum Torque",
-    torque_min, torque_max, torque_max,
-    key="torque_max",
-    help="Set maximum torque - slide left to reduce"
-)
-torque_min_slider = st.sidebar.slider(
-    "Minimum Torque",
-    torque_min, torque_max_slider, torque_min,
-    key="torque_min",
-    help="Set minimum torque (optional)"
-)
-
-# Horsepower sliders
-st.sidebar.markdown("**Horsepower**")
-hp_max_slider = st.sidebar.slider(
-    "Maximum HP",
-    hp_min, hp_max, hp_max,
-    key="hp_max",
-    help="Set maximum horsepower - slide left to reduce"
-)
-hp_min_slider = st.sidebar.slider(
-    "Minimum HP",
-    hp_min, hp_max_slider, hp_min,
-    key="hp_min",
-    help="Set minimum horsepower (optional)"
-)
-
-# Torque to Weight sliders
-st.sidebar.markdown("**Torque/Weight Ratio**")
-tw_max_slider = st.sidebar.slider(
-    "Maximum T/W",
-    tw_min, tw_max, tw_max,
-    step=0.1,
-    key="tw_max",
-    help="Set maximum T/W ratio - slide left to reduce"
-)
-tw_min_slider = st.sidebar.slider(
-    "Minimum T/W",
-    tw_min, tw_max_slider, tw_min,
-    step=0.1,
-    key="tw_min",
-    help="Set minimum T/W ratio (optional)"
-)
-
-# Apply filters
-filtered = df.copy()
-
-if search:
-    filtered = filtered[
-        filtered['Engine'].str.contains(search, case=False, na=False) |
-        filtered['Car'].str.contains(search, case=False, na=False)
-    ]
-
-if turbo == "Turbo Only":
-    filtered = filtered[filtered['Is Turbo']]
-elif turbo == "NA Only":
-    filtered = filtered[~filtered['Is Turbo']]
-
-# Apply range filters
-filtered = filtered[
-    (filtered['Engine Weight (KG)'] >= weight_min_slider) &
-    (filtered['Engine Weight (KG)'] <= weight_max_slider) &
-    (filtered['Max Torque'] >= torque_min_slider) &
-    (filtered['Max Torque'] <= torque_max_slider) &
-    (filtered['HorsePower'] >= hp_min_slider) &
-    (filtered['HorsePower'] <= hp_max_slider) &
-    (filtered['Torque to Weight'] >= tw_min_slider) &
-    (filtered['Torque to Weight'] <= tw_max_slider)
-]
-
-filtered = filtered.sort_values(sort_by, ascending=False).reset_index(drop=True)
-
-# Summary metrics
-col1, col2, col3, col4 = st.columns(4)
-with col1:
-    st.metric("Total Engines", len(filtered))
-with col2:
-    st.metric("⚡ Turbocharged", int(filtered['Is Turbo'].sum()))
-with col3:
-    st.metric("Avg T/W Ratio", f"{filtered['Torque to Weight'].mean():.2f}" if len(filtered) > 0 else "N/A")
-with col4:
-    st.metric("Avg HP", f"{filtered['HorsePower'].mean():.0f}" if len(filtered) > 0 else "N/A")
-
-# Info box about classes
-st.info("ℹ️ **Class Information:** Classes (C1-C5) indicate the performance tier of each engine. This is informational only and helps identify which category each engine belongs to.")
-
-st.markdown("---")
-
-# Top 3 Podium
-if len(filtered) >= 3:
-    st.subheader("🏆 Top 3 Performers")
-    top_cols = st.columns(3)
+with tab1:
+    st.subheader("Engine Performance Database")
     
-    for idx in range(3):
-        eng = filtered.iloc[idx]
-        with top_cols[idx]:
-            emoji = "🥇" if idx == 0 else "🥈" if idx == 1 else "🥉"
-            turbo_badge = "⚡ TURBO" if eng['Is Turbo'] else "NA"
-            
-            st.markdown(f"""
-            <div style='background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; 
-                        border-left: 4px solid {"#fbbf24" if idx==0 else "#d1d5db" if idx==1 else "#f59e0b"};'>
-                <h2 style='margin: 0;'>{emoji} {eng['Engine']}</h2>
-                <p style='color: #9ca3af; margin: 5px 0;'>{eng['Car']} • {eng['Class']} • {turbo_badge}</p>
-                <h1 style='color: #3b82f6; margin: 10px 0;'>{eng['Torque to Weight']:.2f}</h1>
-                <p style='color: #9ca3af; margin: 0;'>Nm/kg</p>
-            </div>
-            """, unsafe_allow_html=True)
+    # Get data ranges
+    weight_min, weight_max = float(engine_df['Engine Weight (KG)'].min()), float(engine_df['Engine Weight (KG)'].max())
+    torque_min, torque_max = float(engine_df['Max Torque'].min()), float(engine_df['Max Torque'].max())
+    hp_min, hp_max = float(engine_df['HorsePower'].min()), float(engine_df['HorsePower'].max())
+    tw_min, tw_max = 0.0, float(engine_df['Torque to Weight'].max())
+    
+    # Sidebar-style filters in columns
+    col_f1, col_f2, col_f3, col_f4 = st.columns(4)
+    
+    with col_f1:
+        search = st.text_input("🔍 Search Engine/Car", "", key="eng_search")
+    with col_f2:
+        turbo = st.radio("Turbo Type", ["All", "Turbo Only", "NA Only"], horizontal=True, key="eng_turbo")
+    with col_f3:
+        sort_by = st.selectbox("Sort By", ["Torque to Weight", "Max Torque", "HorsePower", "Power to Weight", "Engine Weight (KG)"], key="eng_sort")
+    with col_f4:
+        class_filter = st.multiselect("Filter Class", engine_df['Class'].dropna().unique().tolist(), key="eng_class")
+    
+    # Expander for range filters
+    with st.expander("📊 Advanced Filters"):
+        fc1, fc2, fc3, fc4 = st.columns(4)
+        with fc1:
+            weight_range = st.slider("Weight (kg)", weight_min, weight_max, (weight_min, weight_max), key="eng_weight")
+        with fc2:
+            torque_range = st.slider("Max Torque (Nm)", torque_min, torque_max, (torque_min, torque_max), key="eng_torque")
+        with fc3:
+            hp_range = st.slider("Horsepower", hp_min, hp_max, (hp_min, hp_max), key="eng_hp")
+        with fc4:
+            tw_range = st.slider("T/W Ratio", tw_min, tw_max, (tw_min, tw_max), step=0.1, key="eng_tw")
+    
+    # Apply filters
+    filtered = engine_df.copy()
+    
+    if search:
+        filtered = filtered[
+            filtered['Engine'].str.contains(search, case=False, na=False) |
+            filtered['Car'].str.contains(search, case=False, na=False)
+        ]
+    
+    if turbo == "Turbo Only":
+        filtered = filtered[filtered['Is Turbo']]
+    elif turbo == "NA Only":
+        filtered = filtered[~filtered['Is Turbo']]
+    
+    if class_filter:
+        filtered = filtered[filtered['Class'].isin(class_filter)]
+    
+    # Apply range filters
+    filtered = filtered[
+        (filtered['Engine Weight (KG)'] >= weight_range[0]) &
+        (filtered['Engine Weight (KG)'] <= weight_range[1]) &
+        (filtered['Max Torque'] >= torque_range[0]) &
+        (filtered['Max Torque'] <= torque_range[1]) &
+        (filtered['HorsePower'] >= hp_range[0]) &
+        (filtered['HorsePower'] <= hp_range[1]) &
+        (filtered['Torque to Weight'] >= tw_range[0]) &
+        (filtered['Torque to Weight'] <= tw_range[1])
+    ]
+    
+    filtered = filtered.sort_values(sort_by, ascending=False).reset_index(drop=True)
+    
+    # Summary metrics
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.metric("Total Engines", len(filtered))
+    with m2:
+        st.metric("⚡ Turbocharged", int(filtered['Is Turbo'].sum()))
+    with m3:
+        st.metric("Avg T/W Ratio", f"{filtered['Torque to Weight'].mean():.2f}" if len(filtered) > 0 else "N/A")
+    with m4:
+        st.metric("Avg HP", f"{filtered['HorsePower'].mean():.0f}" if len(filtered) > 0 else "N/A")
     
     st.markdown("---")
-
-# Display all engines
-if len(filtered) > 0:
-    st.subheader(f"All Engines (Sorted by {sort_by})")
-
-    for idx, eng in filtered.iterrows():
-        rank = idx + 1
-        emoji = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
-        turbo_icon = " ⚡" if eng['Is Turbo'] else ""
+    
+    # Top 3 Podium
+    if len(filtered) >= 3:
+        st.subheader("🏆 Top 3 Performers")
+        top_cols = st.columns(3)
         
-        turbo_pressure = eng.get('Turbine Pressure', 0)
-        if pd.isna(turbo_pressure):
-            turbo_pressure = 0
-        boost_info = f" • Boost: {turbo_pressure} bar" if eng['Is Turbo'] and turbo_pressure > 0 else ""
-        
-        # Color based on rank
-        border_color = "#fbbf24" if rank == 1 else "#d1d5db" if rank == 2 else "#f59e0b" if rank == 3 else "#4b5563"
-        
-        st.markdown(f"""
-        <div style='background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; 
-                    border-left: 4px solid {border_color}; margin-bottom: 10px;'>
-            <h3 style='margin: 0;'>{emoji} {eng['Engine']}{turbo_icon}</h3>
-            <p style='color: #9ca3af; margin: 5px 0;'><strong>{eng['Car']}</strong> • Class: {eng['Class']}{boost_info}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        c1, c2, c3, c4, c5, c6 = st.columns(6)
-        c1.metric("T/W Ratio", f"{eng['Torque to Weight']:.2f}")
-        c2.metric("Max Torque", f"{eng['Max Torque']:.0f} Nm")
-        c3.metric("Weight", f"{eng['Engine Weight (KG)']:.0f} kg")
-        c4.metric("Horsepower", f"{eng['HorsePower']:.0f} HP")
-        c5.metric("Peak RPM", f"{int(eng['Peak RPM'])}")
-        c6.metric("Rev Limiter", f"{int(eng['Rev Limiter'])}")
+        for idx in range(3):
+            eng = filtered.iloc[idx]
+            with top_cols[idx]:
+                emoji = "🥇" if idx == 0 else "🥈" if idx == 1 else "🥉"
+                turbo_badge = "⚡ TURBO" if eng['Is Turbo'] else "NA"
+                class_val = eng['Class'] if pd.notna(eng['Class']) else "N/A"
+                
+                st.markdown(f"""
+                <div style='background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; 
+                            border-left: 4px solid {"#fbbf24" if idx==0 else "#d1d5db" if idx==1 else "#f59e0b"};'>
+                    <h2 style='margin: 0;'>{emoji} {eng['Engine']}</h2>
+                    <p style='color: #9ca3af; margin: 5px 0;'>{eng['Car']} • {class_val} • {turbo_badge}</p>
+                    <h1 style='color: #3b82f6; margin: 10px 0;'>{eng['Torque to Weight']:.2f}</h1>
+                    <p style='color: #9ca3af; margin: 0;'>Nm/kg</p>
+                </div>
+                """, unsafe_allow_html=True)
         
         st.markdown("---")
-else:
-    st.warning("⚠️ No engines match the current filters. Try adjusting the sliders or filters.")
+    
+    # Display table
+    if len(filtered) > 0:
+        display_cols = ['Car', 'Engine', 'Class', 'Torque to Weight', 'Max Torque', 'HorsePower', 'Engine Weight (KG)', 'Peak RPM', 'Rev Limiter', 'Turbo']
+        st.dataframe(filtered[display_cols].reset_index(drop=True), use_container_width=True, height=500)
+    else:
+        st.warning("⚠️ No engines match the current filters.")
 
-# Footer
+# ============== TAB 2: COMPARE ==============
+
+with tab2:
+    st.subheader("📊 Vehicle Torque Curve Comparison")
+    st.markdown("Select vehicles to compare their hypothetical torque curves")
+    
+    # Vehicle selection
+    available_cars = engine_df['Car'].unique().tolist()
+    
+    col_sel1, col_sel2 = st.columns(2)
+    with col_sel1:
+        selected_cars = st.multiselect(
+            "Select Vehicles to Compare (max 6)",
+            available_cars,
+            default=available_cars[:3] if len(available_cars) >= 3 else available_cars,
+            max_selections=6,
+            key="compare_cars"
+        )
+    with col_sel2:
+        chart_height = st.slider("Chart Height", 400, 800, 500, key="chart_height")
+    
+    if selected_cars:
+        # Create torque curve chart
+        fig = go.Figure()
+        
+        colors = ['#3b82f6', '#ef4444', '#22c55e', '#f59e0b', '#8b5cf6', '#ec4899']
+        
+        for i, car in enumerate(selected_cars):
+            car_data = engine_df[engine_df['Car'] == car].iloc[0]
+            rpm_points, torque_points = get_torque_curve_data(car_data)
+            
+            turbo_label = " ⚡" if car_data['Is Turbo'] else ""
+            
+            fig.add_trace(go.Scatter(
+                x=rpm_points,
+                y=torque_points,
+                mode='lines+markers',
+                name=f"{car} ({car_data['Engine']}){turbo_label}",
+                line=dict(color=colors[i % len(colors)], width=3),
+                marker=dict(size=8),
+                hovertemplate=f"<b>{car}</b><br>RPM: %{{x}}<br>Torque: %{{y:.0f}} Nm<extra></extra>"
+            ))
+        
+        fig.update_layout(
+            title=dict(text="Torque Curves Comparison", font=dict(size=20)),
+            xaxis_title="RPM",
+            yaxis_title="Torque (Nm)",
+            height=chart_height,
+            template="plotly_dark",
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="center",
+                x=0.5
+            ),
+            hovermode='x unified'
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Comparison table
+        st.markdown("### 📋 Detailed Comparison")
+        
+        compare_data = engine_df[engine_df['Car'].isin(selected_cars)][
+            ['Car', 'Engine', 'Class', 'Max Torque', 'HorsePower', 'Engine Weight (KG)', 
+             'Torque to Weight', 'Power to Weight', 'Peak RPM', 'Rev Limiter', 'Turbo', 'Turbine Pressure']
+        ].copy()
+        
+        st.dataframe(compare_data.reset_index(drop=True), use_container_width=True)
+        
+        # Side by side stats
+        st.markdown("### 📈 Quick Stats")
+        stat_cols = st.columns(len(selected_cars))
+        
+        for i, car in enumerate(selected_cars):
+            car_data = engine_df[engine_df['Car'] == car].iloc[0]
+            with stat_cols[i]:
+                turbo_icon = "⚡" if car_data['Is Turbo'] else "🔧"
+                st.markdown(f"**{turbo_icon} {car}**")
+                st.metric("Max Torque", f"{car_data['Max Torque']:.0f} Nm")
+                st.metric("Horsepower", f"{car_data['HorsePower']:.0f} HP")
+                st.metric("T/W Ratio", f"{car_data['Torque to Weight']:.2f}")
+    else:
+        st.info("👆 Select at least one vehicle to see the torque curve comparison")
+
+# ============== TAB 3: WEIGHT ==============
+
+with tab3:
+    st.subheader("⚖️ Chassis Weight Database")
+    
+    # Filters
+    wt_col1, wt_col2, wt_col3, wt_col4 = st.columns(4)
+    
+    with wt_col1:
+        wt_search = st.text_input("🔍 Search Car", "", key="wt_search")
+    with wt_col2:
+        wt_sort = st.selectbox("Sort By", ["Weight", "Car"], key="wt_sort")
+    with wt_col3:
+        wt_order = st.radio("Order", ["Ascending", "Descending"], horizontal=True, key="wt_order")
+    with wt_col4:
+        wt_class = st.multiselect("Filter Class", chassis_df['Class'].dropna().unique().tolist(), key="wt_class")
+    
+    # Weight range filter
+    valid_weights = chassis_df[chassis_df['Weight'].notna()]['Weight']
+    if len(valid_weights) > 0:
+        wt_min, wt_max = float(valid_weights.min()), float(valid_weights.max())
+        wt_range = st.slider("Weight Range (kg)", wt_min, wt_max, (wt_min, wt_max), key="wt_range")
+    else:
+        wt_range = (0, 9999)
+    
+    # Apply filters
+    wt_filtered = chassis_df.copy()
+    
+    # Remove rows with no weight data for this tab
+    wt_filtered = wt_filtered[wt_filtered['Weight'].notna()]
+    
+    if wt_search:
+        wt_filtered = wt_filtered[wt_filtered['Car'].str.contains(wt_search, case=False, na=False)]
+    
+    if wt_class:
+        wt_filtered = wt_filtered[wt_filtered['Class'].isin(wt_class)]
+    
+    wt_filtered = wt_filtered[
+        (wt_filtered['Weight'] >= wt_range[0]) &
+        (wt_filtered['Weight'] <= wt_range[1])
+    ]
+    
+    ascending = wt_order == "Ascending"
+    wt_filtered = wt_filtered.sort_values(wt_sort, ascending=ascending).reset_index(drop=True)
+    
+    # Summary
+    wm1, wm2, wm3, wm4 = st.columns(4)
+    with wm1:
+        st.metric("Total Vehicles", len(wt_filtered))
+    with wm2:
+        st.metric("Lightest", f"{wt_filtered['Weight'].min():.0f} kg" if len(wt_filtered) > 0 else "N/A")
+    with wm3:
+        st.metric("Heaviest", f"{wt_filtered['Weight'].max():.0f} kg" if len(wt_filtered) > 0 else "N/A")
+    with wm4:
+        st.metric("Average", f"{wt_filtered['Weight'].mean():.0f} kg" if len(wt_filtered) > 0 else "N/A")
+    
+    st.markdown("---")
+    
+    # Bar chart
+    if len(wt_filtered) > 0:
+        fig_weight = px.bar(
+            wt_filtered.head(30),
+            x='Car',
+            y='Weight',
+            color='Class',
+            title=f"Vehicle Weights ({wt_order})",
+            template="plotly_dark",
+            color_discrete_sequence=px.colors.qualitative.Set2
+        )
+        fig_weight.update_layout(height=400, xaxis_tickangle=-45)
+        st.plotly_chart(fig_weight, use_container_width=True)
+    
+    # Table
+    st.markdown("### 📋 Weight Data")
+    wt_display = ['Car', 'Weight', 'Class', 'Drivetrain', 'Weight Dist Front/Rear']
+    if len(wt_filtered) > 0:
+        st.dataframe(wt_filtered[wt_display].reset_index(drop=True), use_container_width=True, height=400)
+    else:
+        st.warning("⚠️ No vehicles match the current filters.")
+
+# ============== TAB 4: AERO ==============
+
+with tab4:
+    st.subheader("💨 Aerodynamics Database")
+    
+    # Filters
+    ar_col1, ar_col2, ar_col3, ar_col4 = st.columns(4)
+    
+    with ar_col1:
+        ar_search = st.text_input("🔍 Search Car", "", key="ar_search")
+    with ar_col2:
+        ar_sort = st.selectbox("Sort By", ["Total Aero", "Front Aero", "Rear Aero", "Aero Balance", "Car"], key="ar_sort")
+    with ar_col3:
+        ar_order = st.radio("Order", ["Ascending", "Descending"], horizontal=True, key="ar_order")
+    with ar_col4:
+        ar_class = st.multiselect("Filter Class", chassis_df['Class'].dropna().unique().tolist(), key="ar_class")
+    
+    # Aero range filters
+    ar_exp1, ar_exp2 = st.columns(2)
+    with ar_exp1:
+        front_range = st.slider("Front Aero Range", 
+                                float(chassis_df['Front Aero'].min()), 
+                                float(chassis_df['Front Aero'].max()),
+                                (float(chassis_df['Front Aero'].min()), float(chassis_df['Front Aero'].max())),
+                                key="ar_front")
+    with ar_exp2:
+        rear_range = st.slider("Rear Aero Range",
+                               float(chassis_df['Rear Aero'].min()),
+                               float(chassis_df['Rear Aero'].max()),
+                               (float(chassis_df['Rear Aero'].min()), float(chassis_df['Rear Aero'].max())),
+                               key="ar_rear")
+    
+    # Apply filters
+    ar_filtered = chassis_df.copy()
+    
+    if ar_search:
+        ar_filtered = ar_filtered[ar_filtered['Car'].str.contains(ar_search, case=False, na=False)]
+    
+    if ar_class:
+        ar_filtered = ar_filtered[ar_filtered['Class'].isin(ar_class)]
+    
+    ar_filtered = ar_filtered[
+        (ar_filtered['Front Aero'] >= front_range[0]) &
+        (ar_filtered['Front Aero'] <= front_range[1]) &
+        (ar_filtered['Rear Aero'] >= rear_range[0]) &
+        (ar_filtered['Rear Aero'] <= rear_range[1])
+    ]
+    
+    ascending = ar_order == "Ascending"
+    ar_filtered = ar_filtered.sort_values(ar_sort, ascending=ascending).reset_index(drop=True)
+    
+    # Summary
+    am1, am2, am3, am4 = st.columns(4)
+    with am1:
+        st.metric("Total Vehicles", len(ar_filtered))
+    with am2:
+        st.metric("Avg Front Aero", f"{ar_filtered['Front Aero'].mean():.1f}" if len(ar_filtered) > 0 else "N/A")
+    with am3:
+        st.metric("Avg Rear Aero", f"{ar_filtered['Rear Aero'].mean():.1f}" if len(ar_filtered) > 0 else "N/A")
+    with am4:
+        st.metric("Avg Total Aero", f"{ar_filtered['Total Aero'].mean():.1f}" if len(ar_filtered) > 0 else "N/A")
+    
+    st.markdown("---")
+    
+    # Grouped bar chart for front/rear aero
+    if len(ar_filtered) > 0:
+        chart_data = ar_filtered.head(25).melt(
+            id_vars=['Car', 'Class'],
+            value_vars=['Front Aero', 'Rear Aero'],
+            var_name='Aero Type',
+            value_name='Value'
+        )
+        
+        fig_aero = px.bar(
+            chart_data,
+            x='Car',
+            y='Value',
+            color='Aero Type',
+            barmode='group',
+            title=f"Front vs Rear Aero ({ar_order})",
+            template="plotly_dark",
+            color_discrete_map={'Front Aero': '#3b82f6', 'Rear Aero': '#ef4444'}
+        )
+        fig_aero.update_layout(height=400, xaxis_tickangle=-45)
+        st.plotly_chart(fig_aero, use_container_width=True)
+    
+    # Scatter plot for aero balance
+    if len(ar_filtered) > 0:
+        fig_scatter = px.scatter(
+            ar_filtered,
+            x='Front Aero',
+            y='Rear Aero',
+            color='Class',
+            hover_name='Car',
+            title="Aero Balance Distribution",
+            template="plotly_dark",
+            size='Total Aero',
+            color_discrete_sequence=px.colors.qualitative.Set2
+        )
+        fig_scatter.update_layout(height=400)
+        st.plotly_chart(fig_scatter, use_container_width=True)
+    
+    # Table
+    st.markdown("### 📋 Aero Data")
+    ar_display = ['Car', 'Front Aero', 'Rear Aero', 'Total Aero', 'Aero Balance', 'Class', 'Drivetrain']
+    if len(ar_filtered) > 0:
+        st.dataframe(ar_filtered[ar_display].reset_index(drop=True), use_container_width=True, height=400)
+    else:
+        st.warning("⚠️ No vehicles match the current filters.")
+
+# ============== FOOTER ==============
+
+st.markdown("---")
 st.markdown("""
-<div style='text-align: center; color: #6b7280; padding: 20px; margin-top: 40px;'>
-    <p>🏁 Racing Engine Performance Dashboard</p>
+<div style='text-align: center; color: #6b7280; padding: 20px;'>
+    <p>🏁 Racing Dashboard - Complete Vehicle Analysis</p>
     <p style='font-size: 12px;'>Turbo boost calculated: Actual Torque = Base Torque + (Base Torque × Turbine Pressure)</p>
 </div>
 """, unsafe_allow_html=True)
