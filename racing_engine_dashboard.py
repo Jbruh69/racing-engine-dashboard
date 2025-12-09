@@ -502,20 +502,24 @@ with tab2:
     st.subheader("📊 Vehicle Torque Curve Comparison")
     st.markdown("Select vehicles to compare their hypothetical torque curves")
     
-    # Vehicle selection
-    available_cars = engine_df['Car'].unique().tolist()
+    # Create combined Car + Engine labels for selection
+    engine_df['Selection Label'] = engine_df['Car'] + " (" + engine_df['Engine'] + ")"
+    available_options = engine_df['Selection Label'].unique().tolist()
     
     col_sel1, col_sel2 = st.columns(2)
     with col_sel1:
-        selected_cars = st.multiselect(
-            "Select Vehicles to Compare (max 6)",
-            available_cars,
-            default=available_cars[:3] if len(available_cars) >= 3 else available_cars,
+        selected_options = st.multiselect(
+            "Select by Car or Engine Name (max 6)",
+            available_options,
+            default=available_options[:3] if len(available_options) >= 3 else available_options,
             max_selections=6,
             key="compare_cars"
         )
     with col_sel2:
         chart_height = st.slider("Chart Height", 400, 800, 500, key="chart_height")
+    
+    # Convert selected options back to car names
+    selected_cars = [opt.split(" (")[0] for opt in selected_options]
     
     if selected_cars:
         # Create torque curve chart
