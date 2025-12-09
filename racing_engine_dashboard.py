@@ -323,6 +323,7 @@ with tab1:
 
     # Sort options
     sort_by = st.sidebar.selectbox("Sort By", ["Torque to Weight", "Max Torque", "HorsePower", "Power to Weight", "Engine Weight (KG)"])
+    sort_order = st.sidebar.radio("Order", ["Descending", "Ascending"], key="eng_order")
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("📊 Performance Ranges")
@@ -415,7 +416,7 @@ with tab1:
         (filtered['Torque to Weight'] <= tw_max_slider)
     ]
 
-    filtered = filtered.sort_values(sort_by, ascending=False).reset_index(drop=True)
+    filtered = filtered.sort_values(sort_by, ascending=(sort_order == "Ascending")).reset_index(drop=True)
 
     # Summary metrics
     col1, col2, col3, col4 = st.columns(4)
@@ -435,7 +436,7 @@ with tab1:
 
     # Top 3 Podium
     if len(filtered) >= 3:
-        st.subheader("🏆 Top 3 Performers")
+        st.subheader(f"🏆 Top 3 by {sort_by} ({sort_order})")
         top_cols = st.columns(3)
         
         for idx in range(3):
@@ -445,13 +446,30 @@ with tab1:
                 turbo_badge = "⚡ TURBO" if eng['Is Turbo'] else "NA"
                 class_val = eng['Class'] if pd.notna(eng['Class']) else "N/A"
                 
+                # Display the value being sorted by
+                if sort_by == "Torque to Weight":
+                    display_val = f"{eng['Torque to Weight']:.2f}"
+                    display_unit = "Nm/kg"
+                elif sort_by == "Max Torque":
+                    display_val = f"{eng['Max Torque']:.0f}"
+                    display_unit = "Nm"
+                elif sort_by == "HorsePower":
+                    display_val = f"{eng['HorsePower']:.0f}"
+                    display_unit = "HP"
+                elif sort_by == "Power to Weight":
+                    display_val = f"{eng['Power to Weight']:.2f}"
+                    display_unit = "HP/kg"
+                else:  # Engine Weight
+                    display_val = f"{eng['Engine Weight (KG)']:.0f}"
+                    display_unit = "kg"
+                
                 st.markdown(f"""
                 <div style='background: rgba(255,255,255,0.05); padding: 20px; border-radius: 10px; 
                             border-left: 4px solid {"#fbbf24" if idx==0 else "#d1d5db" if idx==1 else "#f59e0b"};'>
                     <h2 style='margin: 0;'>{emoji} {eng['Engine']}</h2>
                     <p style='color: #9ca3af; margin: 5px 0;'>{eng['Car']} • {class_val} • {turbo_badge}</p>
-                    <h1 style='color: #3b82f6; margin: 10px 0;'>{eng['Torque to Weight']:.2f}</h1>
-                    <p style='color: #9ca3af; margin: 0;'>Nm/kg</p>
+                    <h1 style='color: #3b82f6; margin: 10px 0;'>{display_val}</h1>
+                    <p style='color: #9ca3af; margin: 0;'>{display_unit}</p>
                 </div>
                 """, unsafe_allow_html=True)
         
@@ -459,11 +477,14 @@ with tab1:
 
     # Display all engines
     if len(filtered) > 0:
-        st.subheader(f"All Engines (Sorted by {sort_by})")
+        st.subheader(f"All Engines (Sorted by {sort_by} - {sort_order})")
 
         for idx, eng in filtered.iterrows():
             rank = filtered.index.get_loc(idx) + 1
+            
+            # Show podium medals for top 3
             emoji = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"#{rank}"
+            border_color = "#fbbf24" if rank == 1 else "#d1d5db" if rank == 2 else "#f59e0b" if rank == 3 else "#4b5563"
             turbo_icon = " ⚡" if eng['Is Turbo'] else ""
             
             turbo_pressure = eng.get('Turbine Pressure', 0)
@@ -472,9 +493,6 @@ with tab1:
             boost_info = f" • Boost: {turbo_pressure} bar" if eng['Is Turbo'] and turbo_pressure > 0 else ""
             
             class_val = eng['Class'] if pd.notna(eng['Class']) else "N/A"
-            
-            # Color based on rank
-            border_color = "#fbbf24" if rank == 1 else "#d1d5db" if rank == 2 else "#f59e0b" if rank == 3 else "#4b5563"
             
             st.markdown(f"""
             <div style='background: rgba(255,255,255,0.03); padding: 15px; border-radius: 10px; 
